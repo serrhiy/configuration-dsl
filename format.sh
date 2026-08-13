@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-find src -type f -name '*.cc' -exec clang-format-19 --style=Google -i {} +
+find src lib -type f \( -name '*.cc' -o -name '*.hh' \) \
+    -exec clang-format-19 --style=Microsoft -i {} +
