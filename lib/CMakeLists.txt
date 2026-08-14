@@ -1,3 +1,5 @@
+add_subdirectory(utils)
+
 add_library(jlox
     code_providers/SourceCode.hh
     code_providers/SourceCode.cc
@@ -12,4 +14,5 @@ add_library(jlox
     TokenType.hh
 )
 target_include_directories(jlox PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_link_libraries(jlox PRIVATE utils)
 target_compile_options(jlox PRIVATE -freflection)

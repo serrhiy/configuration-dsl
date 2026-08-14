@@ -1,4 +1,5 @@
 #include "Token.hh"
+#include "utils/utils.hh"
 
 #include <format>
 #include <meta>
@@ -9,20 +10,6 @@ using namespace tokenizer;
 
 namespace
 {
-
-template <typename E>
-    requires(std::meta::is_enum_type(^^E))
-constexpr std::string_view GetEnumName(E value)
-{
-    constexpr static auto enumerators = std::define_static_array(enumerators_of(^^E));
-    template for (constexpr auto enumerator : enumerators)
-    {
-        if (value != [:enumerator:])
-            continue;
-        return std::meta::identifier_of(enumerator);
-    }
-    return "<unknown>";
-}
 
 std::string_view LiteralToString(const Literal &literal)
 {
@@ -48,8 +35,9 @@ std::string_view LiteralToString(const Literal &literal)
 
 std::string Token::ToString() const
 {
-    static constexpr std::string_view format = "type={}; lexeme={}; literal={}";
+    static constexpr std::string_view format = "type={}; lexeme={}; literal={}; column={}";
 
     std::string_view literal_string = LiteralToString(literal);
-    return std::format(format, GetEnumName(type), lexeme, literal_string);
+    std::string_view enum_name = utils::GetEnumName(type);
+    return std::format(format, enum_name, lexeme, literal_string, column);
 }

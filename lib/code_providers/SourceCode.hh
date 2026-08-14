@@ -31,10 +31,11 @@ class ISourceReaderFactory
     virtual std::unique_ptr<ISourceReader> CreateSourceReader() = 0;
 };
 
-class SourceCode
+class SourceCodeProvider
 {
     std::unique_ptr<ISourceReaderFactory> source_reader_factory;
 
+  public:
     class Iterator
     {
         std::unique_ptr<ISourceReader> source_reader;
@@ -59,13 +60,12 @@ class SourceCode
 
     static_assert(std::input_iterator<Iterator>);
 
-  public:
-    explicit SourceCode(std::unique_ptr<ISourceReaderFactory> source_reader_factory);
+    explicit SourceCodeProvider(std::unique_ptr<ISourceReaderFactory> source_reader_factory);
 
     Iterator begin() const;
     std::default_sentinel_t end() const;
 };
 
-static_assert(std::ranges::input_range<SourceCode>);
+static_assert(std::ranges::input_range<SourceCodeProvider>);
 
 } // namespace code_provider

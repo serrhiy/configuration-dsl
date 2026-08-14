@@ -16,6 +16,7 @@ struct Token
     std::string lexeme;
     Literal literal;
     std::size_t line;
+    std::size_t column;
 
     std::string ToString() const;
 };
