@@ -17,6 +17,7 @@ set print elements 200
 
 skip -rfu ^std::
 skip -rfu ^__gnu_cxx::
-skip -gfi /usr/include/c++/*
-skip -gfi /usr/local/include/c++/*
+skip -gfi /usr/local/include/c++/*/*
+skip -gfi /usr/local/include/c++/*/*/*
+skip -gfi /usr/local/include/c++/*/*/*/*
 EOF
