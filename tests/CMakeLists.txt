@@ -1,0 +1,5 @@
+find_package(GTest CONFIG REQUIRED)
+add_executable(unit_tests utils/CircularBufferTest.cc)
+target_link_libraries(unit_tests PRIVATE GTest::gtest_main utils)
+include(GoogleTest)
+gtest_discover_tests(unit_tests)

@@ -16,21 +16,24 @@
                 "CMAKE_INSTALL_PREFIX": "${sourceDir}/bin",
                 "CMAKE_CXX_STANDARD": "26",
                 "CMAKE_CXX_STANDARD_REQUIRED": "ON",
-                "CMAKE_CXX_EXTENSIONS": "OFF"
+                "CMAKE_CXX_EXTENSIONS": "OFF",
+                "CMAKE_TOOLCHAIN_FILE": "$penv{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
             }
         },
         {
             "name": "debug",
             "inherits": "default",
             "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "Debug"
+                "CMAKE_BUILD_TYPE": "Debug",
+                "CONFIGURATION_DSL_TESTS_ENABLE": "ON"
             }
         },
         {
             "name": "release",
             "inherits": "default",
             "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "Release"
+                "CMAKE_BUILD_TYPE": "Release",
+                "CONFIGURATION_DSL_TESTS_ENABLE": "OFF"
             }
         }
     ],
@@ -46,6 +49,24 @@
             "jobs": 4,
             "targets": [
                 "install"
+            ]
+        }
+    ],
+    "testPresets": [
+        {
+            "name": "debug",
+            "configurePreset": "debug",
+            "output": { "outputOnFailure": true },
+            "execution": { "noTestsAction": "error", "stopOnFailure": false }
+        }
+    ],
+    "workflowPresets": [
+        {
+            "name": "debug",
+            "steps": [
+                { "type": "configure", "name": "debug" },
+                { "type": "build",     "name": "debug" },
+                { "type": "test",      "name": "debug" }
             ]
         }
     ]

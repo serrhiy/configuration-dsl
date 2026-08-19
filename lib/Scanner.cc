@@ -27,8 +27,7 @@ constexpr size_t MAX_LEXEME_SIZE = 16;
 
 } // namespace
 
-Scanner::Scanner(SourceCodeProvider source_code_provider)
-    : source_code_provider{std::move(source_code_provider)}
+Scanner::Scanner(SourceCodeProvider source_code_provider) : source_code_provider{std::move(source_code_provider)}
 {
 }
 

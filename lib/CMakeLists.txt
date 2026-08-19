@@ -15,4 +15,3 @@ add_library(jlox
 )
 target_include_directories(jlox PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(jlox PRIVATE utils)
-target_compile_options(jlox PRIVATE -freflection)
