@@ -19,7 +19,6 @@ class Scanner
     {
         code_provider::SourceCodeProvider::Iterator iterator;
         std::optional<tokenizer::Token> current_token;
-        bool finish;
 
         void Pull();
 

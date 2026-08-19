@@ -46,8 +46,6 @@ enum class TokenType
     TRUE,
     VAR,
     WHILE,
-
-    EOFT
 };
 
 } // namespace tokenizer

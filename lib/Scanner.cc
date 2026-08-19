@@ -44,11 +44,6 @@ std::default_sentinel_t Scanner::end() const
 
 void Scanner::Iterator::Pull()
 {
-    if (finish)
-    {
-        current_token.reset();
-        return;
-    }
     std::string lexeme;
     lexeme.reserve(MAX_LEXEME_SIZE);
     while (iterator != std::default_sentinel)
@@ -69,13 +64,11 @@ void Scanner::Iterator::Pull()
                                              .column = symbol.column};
             return;
         }
-
     }
-    current_token = tokenizer::Token{.type = tokenizer::TokenType::EOFT, .literal = std::monostate{}};
-    finish = true;
+    current_token.reset();
 }
 
-Scanner::Iterator::Iterator(SourceCodeProvider::Iterator iterator) : iterator{std::move(iterator)}, finish{ false }
+Scanner::Iterator::Iterator(SourceCodeProvider::Iterator iterator) : iterator{std::move(iterator)}
 {
     Pull();
 }
