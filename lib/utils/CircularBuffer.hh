@@ -8,6 +8,8 @@
 #include <type_traits>
 #include <utility>
 
+#include "CyclicIndex.hh"
+
 namespace utils
 {
 
@@ -32,12 +34,12 @@ class CircularBuffer final
     };
 
     std::array<Slot<T>, Capacity> slots;
-    std::size_t write_index;
+    CyclicIndex<Capacity> write_index;
     std::size_t count;
 
     [[nodiscard]] constexpr std::size_t physical_index(std::size_t index) const noexcept
     {
-        return (write_index + Capacity - 1 - index) % Capacity;
+        return (write_index.GetIndex() + Capacity - 1 - index) % Capacity;
     }
 
   public:
@@ -46,7 +48,7 @@ class CircularBuffer final
     using reference = value_type &;
     using const_reference = const value_type &;
 
-    constexpr CircularBuffer() : slots{}, write_index{0}, count{0}
+    constexpr CircularBuffer() : slots{}, write_index{}, count{0}
     {
     }
 
@@ -83,7 +85,7 @@ class CircularBuffer final
         requires std::constructible_from<T, Args...>
     constexpr reference emplace_back(Args &&...args)
     {
-        Slot<T> &slot = slots[write_index];
+        Slot<T> &slot = slots[write_index.GetIndex()];
         if (full())
         {
             std::destroy_at(std::addressof(slot.value));
@@ -91,7 +93,7 @@ class CircularBuffer final
         }
         std::construct_at(std::addressof(slot.value), std::forward<Args>(args)...);
         ++count;
-        write_index = (write_index + 1) % Capacity;
+        ++write_index;
         return slot.value;
     }
 
@@ -107,9 +109,9 @@ class CircularBuffer final
         {
             return false;
         }
-        write_index = (write_index + Capacity - 1) % Capacity;
+        --write_index;
         --count;
-        std::destroy_at(std::addressof(slots[write_index].value));
+        std::destroy_at(std::addressof(slots[write_index.GetIndex()].value));
         return true;
     }
 
