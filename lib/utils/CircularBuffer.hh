@@ -1,23 +1,44 @@
 #pragma once
 
-#include <algorithm>
 #include <array>
 #include <cassert>
 #include <concepts>
 #include <cstddef>
+#include <memory>
+#include <type_traits>
 #include <utility>
 
 namespace utils
 {
 
-template <std::default_initializable T, std::size_t Capacity>
+template <typename T, std::size_t Capacity>
     requires(Capacity > 0)
 class CircularBuffer final
-
 {
-    std::array<T, Capacity> buffer;
+    template <typename U> union Slot {
+        U value;
+
+        constexpr Slot() noexcept
+        {
+        }
+
+        constexpr ~Slot()
+            requires std::is_trivially_destructible_v<U>
+        = default;
+
+        constexpr ~Slot() noexcept
+        {
+        }
+    };
+
+    std::array<Slot<T>, Capacity> slots;
     std::size_t write_index;
     std::size_t count;
+
+    [[nodiscard]] constexpr std::size_t physical_index(std::size_t index) const noexcept
+    {
+        return (write_index + Capacity - 1 - index) % Capacity;
+    }
 
   public:
     using value_type = T;
@@ -25,40 +46,17 @@ class CircularBuffer final
     using reference = value_type &;
     using const_reference = const value_type &;
 
-    constexpr CircularBuffer() : write_index{0}, count{0}
+    constexpr CircularBuffer() : slots{}, write_index{0}, count{0}
     {
     }
 
-    constexpr void push_back(T value)
-    {
-        buffer[write_index] = std::move(value);
-        write_index = (write_index + 1) % Capacity;
-        count = std::min(count + 1, Capacity);
-    }
+    constexpr ~CircularBuffer()
+        requires std::is_trivially_destructible_v<T>
+    = default;
 
-    constexpr bool pop_back() noexcept
+    constexpr ~CircularBuffer()
     {
-        if (count == 0)
-        {
-            return false;
-        }
-
-        if (write_index == 0)
-        {
-            write_index = Capacity - 1;
-        }
-        else
-        {
-            write_index--;
-        }
-        count--;
-        return true;
-    }
-
-    constexpr void clear() noexcept
-    {
-        write_index = 0;
-        count = 0;
+        clear();
     }
 
     [[nodiscard]] constexpr size_type size() const noexcept
@@ -68,12 +66,12 @@ class CircularBuffer final
 
     [[nodiscard]] constexpr bool empty() const noexcept
     {
-        return count == 0;
+        return size() == 0;
     }
 
     [[nodiscard]] constexpr bool full() const noexcept
     {
-        return count == Capacity;
+        return size() == Capacity;
     }
 
     [[nodiscard]] static constexpr size_type capacity() noexcept
@@ -81,11 +79,54 @@ class CircularBuffer final
         return Capacity;
     }
 
+    template <typename... Args>
+        requires std::constructible_from<T, Args...>
+    constexpr reference emplace_back(Args &&...args)
+    {
+        Slot<T> &slot = slots[write_index];
+        if (full())
+        {
+            std::destroy_at(std::addressof(slot.value));
+            --count;
+        }
+        std::construct_at(std::addressof(slot.value), std::forward<Args>(args)...);
+        ++count;
+        write_index = (write_index + 1) % Capacity;
+        return slot.value;
+    }
+
+    constexpr void push_back(T value)
+        requires std::move_constructible<T>
+    {
+        emplace_back(std::move(value));
+    }
+
+    constexpr bool pop_back() noexcept
+    {
+        if (empty())
+        {
+            return false;
+        }
+        write_index = (write_index + Capacity - 1) % Capacity;
+        --count;
+        std::destroy_at(std::addressof(slots[write_index].value));
+        return true;
+    }
+
+    constexpr void clear() noexcept
+    {
+        for (size_type index = 0; index < size(); ++index)
+        {
+            std::destroy_at(std::addressof(slots[physical_index(index)].value));
+        }
+        count = 0;
+        write_index = 0;
+    }
+
     template <typename Self> [[nodiscard]] constexpr auto &&operator[](this Self &&self, size_type index) noexcept
     {
         assert(index < self.size());
-        const std::size_t physical_index = (self.write_index + Capacity - 1 - index) % Capacity;
-        return std::forward_like<Self>(self.buffer[physical_index]);
+        return std::forward_like<Self>(self.slots[self.physical_index(index)].value);
     }
 };
 
